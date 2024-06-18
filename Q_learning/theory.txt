@@ -1,0 +1,56 @@
+Q-learning:
+
+It is value-based, model-free, off-policy, based on temporal difference method and is tabular.
+
+A new term called Q-function is introduced which determines the quality of taking an action from a given state.
+Hence, V π = ∑π (a|s) Qπ (s, a)
+
+The method uses a Q-table that stores Q-values of all possible state action pairs.
+
+The updates to the Q-values while learning follow-
+Q(st, at) = Q(st, at) + α . [r t + γ . max Q(st + 1, a) − Q (st, at)]
+
+Upon many iterations, the goal is to end up with the optimal Q values which result in maximum reward.
+
+Epsilon-greedy method - This method is used to balance the tradeoff between exploration and exploitation. The variable epsilon is set to a small number (<0.5) and a number x is randomly generated. If x<epsilon, the algorithm explores else it exploits using the Q table to sample the best action.
+
+Q-learning algorithm - 
+
+Initialize Q-table arbitrarily
+Repeat for each episode
+    Initialise state
+    Repeat each step of episode
+        Choose action given state using epsilon-greedy policy
+        Take the action and observe next state and reward
+        Update Q-value based on that
+        Update state
+
+One of the biggest drawbacks of Q-learning method is its inability to scale to bigger problems with more states and actions and also learn in environments which involves continuous states and actions. This is because it uses finite-size tables for learning.
+----------------------------------------------------------------------------------------------
+Experimenting with various parameters in a simple obstacle avoidance problem (Q_learning.py)
+
+
+Observation - 
+
+1.
+Very less num_episodes leads to poor training and failure to reach goal in testing.
+Less num_episodes leads to higher time to reach goal.
+High num_episodes leads to learning of optimal policy
+
+However, the robot learns not to hit any obstacle even with less num_episodes.
+
+2.
+For very low and very high learning rates (alpha), the model takes more episodes to learn optimal policy.
+
+3.
+It represents the significance of future rewards in current state. 
+Very less discount-factor (gamma) will lead to non-optimal poilcy since the final goal occurs in the future.
+Low values lead to greedy policy.
+A higher value is good enough to consider future rewards as well as helps in convergence.
+
+4.
+A lower value encourages more exploration while higher ones encourages exploitation. A value not too low or too high is necessary for a good balance between exploration and exploitation.
+
+-----------------------------------------------------------------------------------------------------
+
+Additional possible improvements include decaying epsilon and alpha. But they're  not really necessary for a small problem like this.
