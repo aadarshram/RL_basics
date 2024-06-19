@@ -1,5 +1,6 @@
 Q-learning:
 
+--------------------------------------------------------------------------------------------------------------------------------
 It is value-based, model-free, off-policy, based on temporal difference method and is tabular.
 
 A new term called Q-function is introduced which determines the quality of taking an action from a given state.

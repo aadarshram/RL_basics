@@ -1,0 +1,43 @@
+Deep Q-learning (DQN):
+---------------------------------------------------------------------------------------------------------------------------
+
+The biggest difference between Q-learning and deep Q-learning is that the latter uses functions approximators, specificallt neural networks instead of tabular storage of Q-values.
+
+A very basic DQN architecture was first proposed which just replaced the table with an NN. The temporal difference loss is updated using gradients instead of DP approach. However, this faces two main issues.
+1. Experience correlation - 
+If the RL algorithm learns from consecutive expereinces which can be highly correlated, it tends to learn that specific consecutive set of events rather than generalizing to new possible events.
+2. Catastrophic forgetting - 
+Another problem with learning from consecutive expereinces is that the more the NN learns from latter events, it tends to start forgetting previous expereinces.
+3. Moving target problem - 
+This exists in Q-learning as well. The loss function which updates the Q values work to reach the target which is calculated based on estimated Q-values for the next state and reward. Now, this in turn keeps changing as Q-values are updated. Effectively, this leads to instability and convergence issues.
+
+A better architecture for the DQN was proposed to alleviate these issues,
+It added two main blocks - 
+1. The replay memory - 
+It stores the transitions (state, action, reward, new state) and then randomly samples transitions from the replay memory for training the NN. This ensures there is no experience correlation and catastrophic forgetting.
+2. Target network - 
+A seperate network is used for calculating the target Q-value. This network is updated is larger steps. Hence, within the duration of those steps, the target remains stable. This improves stability considerably even though it doesn't totally fix the moving target problem.
+
+DQN algorithm - 
+
+Initialize replay memory buffer of some size
+Initialize Q-network and target Q-network with random weights (equal)
+for episode in episodes
+    Initialize state
+    for step in steps
+        Select action using epsilon greedy
+        Observe reward and next state
+        Store transitions in replay memory
+        Sample a batch of random transitions
+        Train the Q-network based on target Q-networks outputs
+        For every C steps, copy weights of Q-network to target Q-network
+
+Drawbacks - 
+
+This cannot be applied to environments with continous action space.
+
+Overestimation bias - 
+The update equation for the Q-values calculate the estimated value using a function approximater like NNs. Suppose the estimated Q-value is higher than what it's true value is then when the update equation keeps considering the maximum each time, the error increases. This is called the problem of overestimation.
+
+--------------------------------------------------------------------------------------------------------
+
