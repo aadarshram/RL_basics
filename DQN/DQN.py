@@ -9,6 +9,8 @@ import matplotlib.pyplot as plt
 from collections import deque, namedtuple
 import random
 import math
+import cv2
+from matplotlib import animation
 
 import torch
 import torch.nn as nn
@@ -17,13 +19,24 @@ import torch.nn.functional as F
 
 # Environment
 
-env = gym.make('CartPole-v1')
+env = gym.make('CartPole-v1', render_mode = 'rgb_array')
 
 # Device
 
 device = torch.device('cuda' if torch.cuda.is_available()
                       else 'mps' if torch.backends.mps.is_available()
                       else 'cpu')
+
+# Hyperparameters
+
+batch_size = 30
+gamma = 0.99
+epsilon_start = 0.9
+epsilon_end = 0.05
+epsilon_decay = 1000
+TAU = 100 # Update rate of target Q-network
+alpha = 1e-2
+
 
 # Define replay buffer
 
@@ -57,8 +70,8 @@ class DQN(nn.Module):
         
         super(DQN, self).__init__()
         self.layer1 = nn.Linear(n_observations, 128)
-        self.layer2 = nn.Linear(128, 128)
-        self.layer3 = nn.Linear(128, n_actions)
+        self.layer2 = nn.Linear(128, 64)
+        self.layer3 = nn.Linear(64, n_actions)
 
     def forward(self, x):
 
@@ -71,7 +84,7 @@ class DQN(nn.Module):
 
 # Define epslion-greedy
 
-def select_action(state, steps, epsilon_start, epsilon_end, epsilon_decay, policy_net):
+def select_action(state, steps, policy_net):
 
     epsilon = epsilon_end + (epsilon_start - epsilon_end) * math.exp(-1 * steps / epsilon_decay)
     steps += 1
@@ -87,8 +100,9 @@ def select_action(state, steps, epsilon_start, epsilon_end, epsilon_decay, polic
         with torch.no_grad():
 
             return policy_net(state).max(1).indices.view(1,1)
+        
 
-def optimize_model(memory, batch_size, policy_net, target_net, gamma, optimizer):
+def optimize_model(memory, policy_net, target_net, optimizer):
 
     if len(memory) < batch_size:
 
@@ -130,20 +144,82 @@ def optimize_model(memory, batch_size, policy_net, target_net, gamma, optimizer)
 
     optimizer.step()
 
+def training(num_episodes, steps, policy_net, memory, target_net, optimizer):
 
-    
+    step = 0
+
+    for episode in range(num_episodes):
+
+        state, _ = env.reset()
+        state = torch.tensor(state, dtype = torch.float32, device = device).unsqueeze(0)
+
+        terminated = False
+        truncated = False
+
+        while not (terminated or truncated):
+            action = select_action(state, steps, policy_net)
+            observation, reward, terminated, truncated, _ = env.step(action.item())
+            reward = torch.tensor([reward], device = device)
+            
+            if terminated:
+                next_state = None
+            else:
+                next_state = torch.tensor(observation, dtype = torch.float32, device = device).unsqueeze(0)
+            
+            memory.push(state, action, next_state, reward)
+
+            state = next_state
+
+            optimize_model(memory, policy_net, target_net, optimizer)
+            
+            step += 1
+
+            # Soft update target network
+
+            if step % TAU == 0:
+          
+                target_net.load_state_dict(policy_net.state_dict())
+
+            
+    print('Training complete')
+
+def testing(policy_net, num_episodes, save_path = 'animation'):
+
+    # Test agent
+    for episode in range(num_episodes):
+        state, _ = env.reset()
+        state = torch.tensor(state, dtype = torch.float32, device = device).unsqueeze(0)
+        terminated = False
+        truncated = False
+
+        frames = []
+        while not (terminated or truncated):
+            frame = env.render()
+            frames.append(frame)
+
+            with torch.no_grad():
+                action = policy_net(state).max(1).indices.item()
+
+            next_state, reward, terminated, truncated, _ = env.step(action)
+
+            state = torch.tensor(next_state, dtype = torch.float32, device = device).unsqueeze(0)
+
+        print(len(frames))
+        # Display performance
+
+        fig = plt.figure()
+        plt.axis('off')
+        images = [[plt.imshow(frame, animated = True)] for frame in frames]
+
+        Animation = animation.ArtistAnimation(fig, images, interval = 50, blit = True)
+
+        Animation.save(f'{save_path}.mp4')
+        plt.show()
+
+
 def main():
 
-    # Hyperparameters
-
-    batch_size = 128
-    gamma = 0.99
-    epsilon_start = 0.9
-    epsilon_end = 0.05
-    epsilon_decay = 1000    
-    TAU = 50 # Update rate of target Q-network
-    alpha = 1e-4
-
+    
     # Environment info
 
     n_actions = env.action_space.n
@@ -164,44 +240,15 @@ def main():
 
     steps = 0
 
-    num_episodes = 600
+    num_episodes = 100
 
-    step = 0
+    # Training
+    training(num_episodes, steps, policy_net, memory, target_net, optimizer)
 
-    for episode in range(num_episodes):
+    # Testing
+    testing(policy_net, num_episodes = 1)
 
-        state, _ = env.reset()
-        state = torch.tensor(state, dtype = torch.float32, device = device).unsqueeze(0)
-
-        terminated = False
-        truncated = False
-
-        while not (terminated or truncated):
-            action = select_action(state, steps, epsilon_start, epsilon_end, epsilon_decay, policy_net)
-            observation, reward, terminated, truncated, _ = env.step(action.item())
-            reward = torch.tensor([reward], device = device)
-            
-            if terminated:
-                next_state = None
-            else:
-                next_state = torch.tensor(observation, dtype = torch.float32, device = device).unsqueeze(0)
-            
-            memory.push(state, action, next_state, reward)
-
-            state = next_state
-
-            optimize_model(memory, batch_size, policy_net, target_net, gamma, optimizer)
-            
-            step += 1
-
-            # Soft update target network
-
-            if step & TAU == 0:
-          
-                target_net.load_state_dict(policy_net.state_dict())
-
-            
-    print('Training complete')
+    
 
 if __name__ == '__main__':
     main()
