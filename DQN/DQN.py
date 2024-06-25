@@ -1,5 +1,5 @@
 '''
-A Deep Q-learning implementation to train an RL agent to balance an inverted pendulum
+A Deep Q-learning implementation to train an RL agent to solve the cartpole problem
 '''
 
 # Import libraries
@@ -27,15 +27,17 @@ device = torch.device('cuda' if torch.cuda.is_available()
                       else 'mps' if torch.backends.mps.is_available()
                       else 'cpu')
 
+print('Using', device)
+
 # Hyperparameters
 
-batch_size = 30
+batch_size = 32
 gamma = 0.99
-epsilon_start = 0.9
-epsilon_end = 0.05
-epsilon_decay = 1000
-TAU = 100 # Update rate of target Q-network
-alpha = 1e-2
+epsilon_start = 1
+epsilon_end = 0.1
+epsilon_decay = 1e-2
+C = 50 # Update rate of target Q-network
+alpha = 1e-4
 
 
 # Define replay buffer
@@ -69,25 +71,30 @@ class DQN(nn.Module):
     def __init__(self, n_observations, n_actions):
         
         super(DQN, self).__init__()
-        self.layer1 = nn.Linear(n_observations, 128)
-        self.layer2 = nn.Linear(128, 64)
-        self.layer3 = nn.Linear(64, n_actions)
+        self.layer1 = nn.Linear(n_observations, 256)
+        self.layer2 = nn.Linear(256, 128)
+        self.layer3 = nn.Dropout(0.2)
+        self.layer4 = nn.Linear(128, 64)
+        self.layer5 = nn.Dropout(0.2)
+        self.layer6 = nn.Linear(64, n_actions)
 
     def forward(self, x):
 
         x = F.relu(self.layer1(x))
         x = F.relu(self.layer2(x))
-        y = self.layer3(x)
+        x = self.layer3(x)
+        x = F.relu(self.layer4(x))
+        x = self.layer5(x)
+        y = self.layer6(x)
 
         return y # return Q values corresponding to each action
     
 
 # Define epslion-greedy
 
-def select_action(state, steps, policy_net):
+def select_action(state, step, policy_net):
 
-    epsilon = epsilon_end + (epsilon_start - epsilon_end) * math.exp(-1 * steps / epsilon_decay)
-    steps += 1
+    epsilon = epsilon_end + (epsilon_start - epsilon_end) * math.exp(-1 * step * epsilon_decay)
 
     x = random.random()
 
@@ -132,7 +139,8 @@ def optimize_model(memory, policy_net, target_net, optimizer):
     estimated_state_action_values = reward_batch + next_state_values * gamma
 
     # Huber loss
-    criterion = nn.SmoothL1Loss()
+    # criterion = nn.SmoothL1Loss()
+    criterion = nn.MSELoss()
     loss = criterion(state_action_values, estimated_state_action_values.unsqueeze(1))
 
     # Optimize
@@ -144,9 +152,9 @@ def optimize_model(memory, policy_net, target_net, optimizer):
 
     optimizer.step()
 
-def training(num_episodes, steps, policy_net, memory, target_net, optimizer):
+def training(num_episodes, policy_net, memory, target_net, optimizer):
 
-    step = 0
+    total_reward = 0
 
     for episode in range(num_episodes):
 
@@ -156,11 +164,18 @@ def training(num_episodes, steps, policy_net, memory, target_net, optimizer):
         terminated = False
         truncated = False
 
+        step = 0
+
         while not (terminated or truncated):
-            action = select_action(state, steps, policy_net)
+
+            action = select_action(state, step, policy_net)
             observation, reward, terminated, truncated, _ = env.step(action.item())
+
+            step += 1
+            total_reward += reward
             reward = torch.tensor([reward], device = device)
             
+
             if terminated:
                 next_state = None
             else:
@@ -172,13 +187,16 @@ def training(num_episodes, steps, policy_net, memory, target_net, optimizer):
 
             optimize_model(memory, policy_net, target_net, optimizer)
             
-            step += 1
 
             # Soft update target network
 
-            if step % TAU == 0:
+            if step % C == 0:
           
                 target_net.load_state_dict(policy_net.state_dict())
+
+        if (episode + 1) % (num_episodes / 10) == 0:
+            print(f'Average total reward obtained every {(num_episodes / 10)} episodes is {total_reward / (num_episodes / 10)} ')
+            total_reward = 0
 
             
     print('Training complete')
@@ -193,7 +211,10 @@ def testing(policy_net, num_episodes, save_path = 'animation'):
         truncated = False
 
         frames = []
+        total_reward = 0
+        steps = 0
         while not (terminated or truncated):
+
             frame = env.render()
             frames.append(frame)
 
@@ -201,10 +222,15 @@ def testing(policy_net, num_episodes, save_path = 'animation'):
                 action = policy_net(state).max(1).indices.item()
 
             next_state, reward, terminated, truncated, _ = env.step(action)
+            total_reward += reward
 
             state = torch.tensor(next_state, dtype = torch.float32, device = device).unsqueeze(0)
+            
+            steps += 1
 
-        print(len(frames))
+        print('Testing complete')
+        print(f'Achieved a total reward of {total_reward} in {steps} steps')
+
         # Display performance
 
         fig = plt.figure()
@@ -234,16 +260,15 @@ def main():
     target_net.load_state_dict(policy_net.state_dict()) # Copy weights
 
     optimizer = optim.AdamW(policy_net.parameters(), lr = alpha, amsgrad = True)
-    
-    capacity = 10000
+    # optimizer = optim.SGD(policy_net.parameters(), lr = alpha)
+
+    capacity = int(1e5)
     memory = ReplayMemory(capacity)
 
-    steps = 0
-
-    num_episodes = 100
+    num_episodes = 1000
 
     # Training
-    training(num_episodes, steps, policy_net, memory, target_net, optimizer)
+    training(num_episodes, policy_net, memory, target_net, optimizer)
 
     # Testing
     testing(policy_net, num_episodes = 1)

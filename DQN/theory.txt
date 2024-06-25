@@ -41,3 +41,6 @@ The update equation for the Q-values calculate the estimated value using a funct
 
 --------------------------------------------------------------------------------------------------------
 
+Experiments:
+
+With a basic implementation and fine-tuning hyperparameters, the best I can achieve is a total reward of 154 over 500 while testing.
