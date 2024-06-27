@@ -10,15 +10,20 @@ If the RL algorithm learns from consecutive expereinces which can be highly corr
 Another problem with learning from consecutive expereinces is that the more the NN learns from latter events, it tends to start forgetting previous expereinces.
 3. Moving target problem - 
 This exists in Q-learning as well. The loss function which updates the Q values work to reach the target which is calculated based on estimated Q-values for the next state and reward. Now, this in turn keeps changing as Q-values are updated. Effectively, this leads to instability and convergence issues.
+4. Overestimation bias - 
+The update equation for the Q-values calculate the estimated value using a generalized function approximater like NNs which can introduce noise. Suppose the estimated Q-value is higher than what it's true value is then when the update equation keeps considering the maximum each time, the error increases. This is called the problem of overestimation.
 
 A better architecture for the DQN was proposed to alleviate these issues,
+
 It added two main blocks - 
 1. The replay memory - 
 It stores the transitions (state, action, reward, new state) and then randomly samples transitions from the replay memory for training the NN. This ensures there is no experience correlation and catastrophic forgetting.
 2. Target network - 
-A seperate network is used for calculating the target Q-value. This network is updated is larger steps. Hence, within the duration of those steps, the target remains stable. This improves stability considerably even though it doesn't totally fix the moving target problem.
+A seperate network is used for calculating the target Q-value. This network is updated in larger steps. Hence, within the duration of those steps, the target remains stable. This improves stability considerably even though it doesn't totally fix the moving target problem. Also, since the target network is behind by a number of steps it also helps reduce overestimation.
 
-DQN algorithm - 
+This emerged to be the Double DQN architecture.
+
+Double DQN algorithm - 
 
 Initialize replay memory buffer of some size
 Initialize Q-network and target Q-network with random weights (equal)
@@ -36,11 +41,18 @@ Drawbacks -
 
 This cannot be applied to environments with continous action space.
 
-Overestimation bias - 
-The update equation for the Q-values calculate the estimated value using a function approximater like NNs. Suppose the estimated Q-value is higher than what it's true value is then when the update equation keeps considering the maximum each time, the error increases. This is called the problem of overestimation.
 
 --------------------------------------------------------------------------------------------------------
 
 Experiments:
 
-With a basic implementation and fine-tuning hyperparameters, the best I can achieve is a total reward of 154 over 500 while testing.
+With a basic implementation and fine-tuning hyperparameters, the best I could achieve was a total reward of 218 over 500 while testing. It is said that DQN doesn't perform very well on cartpole and that it is extremely sensitive to the choice of hyperparameters.
+------------------------------------------------------------------------------------------------------------------
+Future work:
+
+1. Enable prioritized experience replay where more useful transitions are sampled with higher probability from the replay buffer and the less useful ones with lower. The usefulness can be determined by how low the TD-loss is.
+2. Clipped Double Q-learning - Use the minimum Q value of both the neural networks to avoid overestimation.
+3. Duelling Network architecture - The Q network simultaneously learns which states are valuable and actions advantageous.
+4. Soft update target network each step than periodic hard update.
+5. Prioritized target updates.
+--------------------------------------------------------------------------------------------------------------------
