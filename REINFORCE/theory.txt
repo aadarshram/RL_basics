@@ -1,0 +1,56 @@
+REINFORCE:
+----------------------------------------------------------------------------------------------------------------
+This is a policy-based, model-free, on-policy, Monte Carlo based algorithm which uses Neural Networks as function approximators.
+
+Policy based algorithms are a popular way of doing RL. They map states directly to actions instead of Q-values via a learnable differentiable function approximator such as NNs. The function approximator, however, should be differentiable in the case of policy based gradient algorithms like REINFORCE.
+---------------------------------------------------------------------------------------------------
+Advantages:
+
+Policy gradient methods can learn a stochastic policy while value functions cannot. This is because the NNs output a probability distribution over actions.
+Perceptual aliasing - Sometimes the agent finds multiple states seem the same according to the way they observe. However, these might require different actions. One way of overcoming this is using stochastic policy.
+Note that the epsilon greedy policy was an add-on to introduce stochasticity so that the deterministic (or quasi-deterministic to be exact) learns to explore and figure things out.
+Policy based methods prove to be more effective in high dimensional and continuous action spaces. You cannot possibly assign a score for every state-action pair in such cases.
+These methods have better convergence property. Value based methods can introduce dramatic changes in the policy for each update because it chooses a completely different action if it ends up with a higher Q-value. On the other hand, in policy methods, the probability distribution changes smoothly over time.
+
+Disadvantages:
+
+The reward environment need not be convex which can easily lead to policy to learn a local maxima instead of global. Hence, it is also highly dependent on the initial policy.
+They can be slow to converge. While their convergence is stable, the gradient updat steps are small. This can lead to longer training time.
+Stochastic policy can introduce high variance in the rewards which makes the training unstable.
+---------------------------------------------------------------------------------------------------
+How policy gradient works?
+In each train step
+    Calculate total return from an episode
+    if positive gain
+        increase probability of each action taken in the episode
+    if negative return
+        decrease the probability of each action taken in the episode
+
+The cost function or the objective is the expectation of the cumulative return from all possible trajectories.
+However, it holds a problem.
+
+Computing the cost for all possible trajectories is expensive. So we do a sample based estimate for the gradient.
+Another problem lies in the uncertainty of the enironment dyanmics. This makes it hard to differentiate the cost function which depends on a term that depends on the environment.
+
+This is solved by reformulating the cost function using the Policy Gradient theorem.
+
+Rewriting the terms and simplifying, we end up with the gradient of cost function being,
+dJ = 1/m * (sum over i = 1-m)(Cumulative return for a given trajectory)(sum over t = 0-H)Grad(log(probability of choosing action a from state s at timestep t))
+Note that this uses sample based estimate of gradient with m samples.
+
+A monte carlo implementation of the basic policy gradient method workflow constitutes the REINFORCE algorithm. Since it is a monte carlo based method, training is done after each episode as a whole unlike Temporal difference based method in which training is done after every step.
+
+------------------------------------------------------------------------------------------------------------------
+Monte Carlo vs TD learning:
+
+Monte Carlo is sample based and hence gives unbiased estimates for the return.
+However it causes high variance because it calculates return over a whole episode.
+One way to address this is to average over many trajectories hoping that the variance introduced in any one trajectory will be reduced in aggregate.
+
+TD method uses bootstrapping to estimate value functions and updates every step which ensures lower variance.
+However it causes high bias since the estimates are based on current values which may be inaccurate.
+
+A solution is to balance bias and variance by coming to a middle ground.
+N-step bootstrapping - This is a method where you introduce a new hyperparameter called n, where n corresponds to the number of steps in an episode to consider to calculate the cumulative return. So, its neither one step nor whole episode which somehow provides a balance with a suitable value for n.
+------------------------------------------------------------------------------------------------------------------------------
+

@@ -1,0 +1,35 @@
+Advantage Actor Critic (A2C):
+-------------------------------------------------------------------------------------
+
+The actor-critic methods, a hybrid architecture combining value based and policy based methods help reduce the variance problem which was a major shortcoming of REINFORCE.
+This does so by using 
+1. An actor that controls how the agent behaves using policy based methods.
+2. A critic that measures how good a taken action was using value based methods.
+
+The idea is to subtract the cumulative return with some baseline which will ensure smaller steps and stable updates made on the gradient ascent.
+The difference varies with different Actor Critic methods - 
+1. Q-value - Q Actor Critic (There is no baseline subtracted. This is a way to rewrite the update equation and then use value based NN to get the Q-function)
+2. Advantage - Advantage Actor Critic
+3. TD error - TD Actor Critic
+note: The advantage is basically the difference between state action value and the average state value over all actions. This tells how much better is choosing a certain action over the average.
+
+---------------------------------------------------------------------------------------------------
+
+Algorithm for Q Actor Critic - 
+
+Initialize the two networks, each one's learning rate.
+Sample an action wrt current policy
+for time in total time
+    get the reward and next state for the sampled action
+    sample the next action
+    update the policy parameters with the Q value for the present action
+    update the Q-function parameters with the TD error between new action and present.
+    update present state and present action
+end for
+
+It is said that the value function proves to be the best. The difference between Q-value and the Value function is called the Advantage of choosing a certain action.
+Now, Q(st,at) = E(Rt+1 + gamma * V(st+1)) Hence
+We can use one critic NN which calculates the Value function to compute the advantage and update the policy. The advantage is basically the TD error in Value function.
+--------------------------------------------------------------------------------------------------------
+
+

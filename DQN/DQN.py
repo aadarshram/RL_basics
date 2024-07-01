@@ -1,5 +1,5 @@
 '''
-A Deep Q-learning implementation to train an RL agent to solve the cartpole problem
+A Double Deep Q-learning implementation to train an RL agent to solve the cartpole problem
 '''
 
 # Import libraries
@@ -265,7 +265,7 @@ def main():
     capacity = int(1e5)
     memory = ReplayMemory(capacity)
 
-    num_episodes = 1000
+    num_episodes = 100000
 
     # Training
     training(num_episodes, policy_net, memory, target_net, optimizer)
