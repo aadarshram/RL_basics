@@ -1,0 +1,11 @@
+{
+    "env": "FrozenLake-v1",
+    "hyperparameters": {
+        "alpha": 0.001,
+        "gamma": 0.99,
+        "epsilon": 0.4,
+        "num_episodes": 10000,
+        "num_test_episodes": 1
+    },
+    "test_video": "animation"
+}

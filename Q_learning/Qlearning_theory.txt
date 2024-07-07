@@ -1,5 +1,4 @@
 Q-learning:
-
 --------------------------------------------------------------------------------------------------------------------------------
 It is value-based, model-free, off-policy, based on temporal difference method and is tabular.
 
@@ -10,6 +9,8 @@ The method uses a Q-table that stores Q-values of all possible state action pair
 
 The updates to the Q-values while learning follow-
 Q(st, at) = Q(st, at) + α . [r t + γ . max Q(st + 1, a) − Q (st, at)]
+where r t + gamma . max Q(st + 1, a) is an estimated target Q-value. The method of making such estimate is called bootstrapping.
+and the difference is called the Temporal Difference (TD) error.
 
 Upon many iterations, the goal is to end up with the optimal Q values which result in maximum reward.
 
@@ -27,31 +28,12 @@ Repeat for each episode
         Update state
 
 One of the biggest drawbacks of Q-learning method is its inability to scale to bigger problems with more states and actions and also learn in environments which involves continuous states and actions. This is because it uses finite-size tables for learning.
-----------------------------------------------------------------------------------------------
-Experimenting with various parameters in a simple obstacle avoidance problem (Q_learning.py)
-
-
-Observation - 
-
-1.
-Very less num_episodes leads to poor training and failure to reach goal in testing.
-Less num_episodes leads to higher time to reach goal.
-High num_episodes leads to learning of optimal policy
-
-However, the robot learns not to hit any obstacle even with less num_episodes.
-
-2.
-For very low and very high learning rates (alpha), the model takes more episodes to learn optimal policy.
-
-3.
-It represents the significance of future rewards in current state. 
-Very less discount-factor (gamma) will lead to non-optimal poilcy since the final goal occurs in the future.
-Low values lead to greedy policy.
-A higher value is good enough to consider future rewards as well as helps in convergence.
-
-4.
-A lower value encourages more exploration while higher ones encourages exploitation. A value not too low or too high is necessary for a good balance between exploration and exploitation.
 
 -----------------------------------------------------------------------------------------------------
+Additional improvements include -
 
-Additional possible improvements include decaying epsilon and alpha. But they're  not really necessary for a small problem like this.
+Decaying epsilon - 
+Can be linear, exponential, inverse (decreases as time increases), piecewise constant, adaptive (modify based on relative performance)
+Adaptive learning rate - 
+Can be step decay, exponential decay, inverse time, adaptive (based on gradient's moments)
+----------------------------------------------------------------------------------------------------------
