@@ -1,0 +1,19 @@
+Proximal Policy Optimization (PPO):
+
+The PPO algorithm tries to improve training stability by limiting how much a policy can change at each epoch. This is because a smaller policy update ensures convergence and no overshooting. This is done by clipping the policy if the ratio of the current policy and the former goes beyond the range [1 - epsilon, 1 + epsilon] for some epsilon.
+Hence, came the name "proximal" policy.
+
+Clipped Surrogate Objective Function:
+
+L_policy = E[min(rA, clip(r, 1-e, 1+e)A)] where r = pi current / pi previous for the actor
+L_value = MSE(Vtarget - V) for the critic
+
+
+Sometimes,  people also include another loss function called the entropy bonus to encourage exploration.
+
+L_h = - Es[Ea[log(pi(a/s))]] * beta (beta is a hyperparameter to contorl amount of regularisation)
+
+There is also another method called the Trust Region Policy Optimization (TRPO) which uses KL divergence constraints outside the objective function to constrain the policy update. However it introduces complexity whereas the former is a much simpler implementation.
+
+Trust Region Policy Optimization (TRPO) - 
+

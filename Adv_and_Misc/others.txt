@@ -1,0 +1,35 @@
+Some advanced topics in Reinforcement Learning:
+-------------------------------------------------------------------------------------------------------------------------------
+Entropy - 
+To allow for more robust policy to changing environments and robust learning we introduce an entropy regularisation term in the objective function.
+Given a policy, calculate the entropy of that policy with a trade-off factor of beta.
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+Curiosity driven Reinforcement Learning -  
+
+We introduce self-rewarding concept to push the agent to explore on its own. We do this by rewarding based on curiosity.
+The curiosity reward is basically the difference between an estimated next state and an actual next state. The higher the difference, the higher is the reward making the agent curious to explore that state.
+The next state is estimated by passing the current state and actions to a neural network.
+This tackles the sparse reward problem pretty well.
+
+There are some problems with this though.
+Since the agent is rewarded for estimating a different next state, there are chances that the neural network learns to predict noisy outputs. This is called the Noisy TV problem and Procrastinating agents.
+Another issue is that not all random states do we wan't the agent to explore. Some are important while rest are pointless. (Eg: Mario agent exploring the clouds and birds which exist for aesthetics and has nothing to do with the game.)
+
+The Intrinsic Curiosity Module (ICM) - 
+
+To ensure that we encourage the agent to be curious about relevant things we encode the current and the new state using an encoder which will be trained to extract only relevant features.
+Now, we smartly train these encoders by passing the current and next state to another neural network designed to predict the action taken. Comparing with the actual action taken train the inverse network but along with the encoder. This way the encoder is encouraged to output a relevant feature space, Next, input the current state and action to a neural network that predicts the next state. Train it with the actual next state while also using its MSE loss as a curiosity reward.
+
+This ICM can be introduced in any RL algorithm and attempts to solve the sparse reward problem.
+
+Curiosity through Random Network Distillation (RND) - 
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+Model Based Reinforcement Learning (MBRL) - 
+
+The basic idea is to try modelling the environment dynamics. An agent repeatedly tries to solve a problem and collects the data of its states and action which it uses to improve its model. This is pretty useful in a partially understood environment.
+
+Model Predictive Control (MPC) - 
+
