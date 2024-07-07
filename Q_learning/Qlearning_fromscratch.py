@@ -16,7 +16,9 @@ with open('config.json', 'r') as file:
 env_name = config['env']
 alpha = config['hyperparameters']['alpha']
 gamma = config['hyperparameters']['gamma']
-epsilon = config['hyperparameters']['epsilon'] 
+epsilon_start = config['hyperparameters']['epsilon_start'] 
+epsilon_end = config['hyperparameters']['epsilon_end'] 
+epsilon_decay = config['hyperparameters']['epsilon_decay'] 
 num_episodes = config['hyperparameters']['num_episodes']
 num_test_episodes = config['hyperparameters']['num_test_episodes']
 test_video = config['test_video']
@@ -33,6 +35,7 @@ Qtable = np.zeros((state_space, action_space))
 
 # Training
 
+epsilon = epsilon_start
 for episode in range(num_episodes):
     state = env.reset()[0]
     total_reward = 0
@@ -45,24 +48,26 @@ for episode in range(num_episodes):
         if np.random.rand() < epsilon:
             action = env.action_space.sample()
         else:
-            action = np.argmax(Qtable[state])
+            action = np.argmax(Qtable[state, :])
         
         next_state, reward, terminated, truncated, _ = env.step(action)
         total_reward += reward
 
-        td_error = reward + gamma * np.max(Qtable[next_state]) - Qtable[state][action]
+        td_error = reward + gamma * np.max(Qtable[next_state, :]) - Qtable[state, action]
 
         Qtable[state][action] += alpha * td_error
 
         state = next_state
 
+    epsilon = epsilon_end + (epsilon_start - epsilon_end) * np.exp(- epsilon_decay * episode)
     print(f'Episode {episode + 1}: Total Reward = {total_reward}')
 
-env.close()
+# env.close()
 
 # Testing
 
-eval_env = gym.make(env_name, render_mode = 'rgb_array')
+# eval_env = gym.make(env_name, render_mode = 'rgb_array')
+eval_env = env
 frames = []
 total_rewards = []
 
@@ -74,7 +79,7 @@ for episode in range(num_test_episodes):
     truncated = False
 
     while not (terminated or truncated):
-        action = np.argmax(Qtable[state])
+        action = np.argmax(Qtable[state, :])
         next_state, reward, terminated, truncated, _ = env.step(action)
 
         total_reward += reward
