@@ -40,19 +40,15 @@ for episode in episodes
 Drawbacks - 
 
 This cannot be applied to environments with continous action space.
-
-
---------------------------------------------------------------------------------------------------------
-
-Experiments:
-
-With a basic implementation and fine-tuning hyperparameters, the best I could achieve was a total reward of 218 over 500 while testing. It is said that DQN doesn't perform very well on cartpole and that it is extremely sensitive to the choice of hyperparameters.
 ------------------------------------------------------------------------------------------------------------------
-Future work:
+Add-ons :
 
 1. Enable prioritized experience replay where more useful transitions are sampled with higher probability from the replay buffer and the less useful ones with lower. The usefulness can be determined by how low the TD-loss is.
 2. Clipped Double Q-learning - Use the minimum Q value of both the neural networks to avoid overestimation.
 3. Duelling Network architecture - The Q network simultaneously learns which states are valuable and actions advantageous.
-4. Soft update target network each step than periodic hard update.
-5. Prioritized target updates.
+4. Soft update target network each step than periodic hard update that ensures the target network is improving while also being stable.
+5. Prioritized target updates - Update the target network with all the useful learning.
+6. Distributional DQN - Model the estimated Q-values as a distribution over an exact value.
+7. Noisy DQN - Add noise within the neural networks to enhance further exploration besides the epsilon greedy strategy.
+
 --------------------------------------------------------------------------------------------------------------------

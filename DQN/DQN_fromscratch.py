@@ -9,17 +9,36 @@ import matplotlib.pyplot as plt
 from collections import deque, namedtuple
 import random
 import math
-import cv2
 from matplotlib import animation
+import json
+from tqdm import tqdm
 
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 
+# Get config
+with open('config.json', 'r') as file:
+    config = json.load(file)
+
+env_name = config['env']
+alpha = config['hyperparameters']['alpha']
+gamma = config['hyperparameters']['gamma']
+batch_size = config['hyperparameters']['batch_size']
+C = config['hyperparameters']['trgt_update_every']
+buffer_size = config['hyperparameters']['buffer_size']
+epsilon_start = config['hyperparameters']['epsilon_start'] 
+epsilon_end = config['hyperparameters']['epsilon_end'] 
+epsilon_decay = config['hyperparameters']['epsilon_decay'] 
+num_episodes = config['hyperparameters']['num_episodes']
+num_test_episodes = config['hyperparameters']['num_test_episodes']
+training_starts = config['hyperparameters']['num_test_episodes']
+test_video = config['test_video']
+
 # Environment
 
-env = gym.make('CartPole-v1', render_mode = 'rgb_array')
+env = gym.make(env_name, render_mode = 'rgb_array')
 
 # Device
 
@@ -28,17 +47,6 @@ device = torch.device('cuda' if torch.cuda.is_available()
                       else 'cpu')
 
 print('Using', device)
-
-# Hyperparameters
-
-batch_size = 32
-gamma = 0.99
-epsilon_start = 1
-epsilon_end = 0.1
-epsilon_decay = 1e-2
-C = 50 # Update rate of target Q-network
-alpha = 1e-4
-
 
 # Define replay buffer
 
@@ -71,30 +79,26 @@ class DQN(nn.Module):
     def __init__(self, n_observations, n_actions):
         
         super(DQN, self).__init__()
-        self.layer1 = nn.Linear(n_observations, 256)
-        self.layer2 = nn.Linear(256, 128)
+        self.layer1 = nn.Linear(n_observations, 128)
+        self.layer2 = nn.Linear(128, 32)
         self.layer3 = nn.Dropout(0.2)
-        self.layer4 = nn.Linear(128, 64)
-        self.layer5 = nn.Dropout(0.2)
-        self.layer6 = nn.Linear(64, n_actions)
+        self.layer4 = nn.Linear(32, n_actions)
 
     def forward(self, x):
 
         x = F.relu(self.layer1(x))
         x = F.relu(self.layer2(x))
         x = self.layer3(x)
-        x = F.relu(self.layer4(x))
-        x = self.layer5(x)
-        y = self.layer6(x)
-
+        y = self.layer4(x)
+        
         return y # return Q values corresponding to each action
     
 
 # Define epslion-greedy
 
-def select_action(state, step, policy_net):
+def select_action(state, episode, policy_net):
 
-    epsilon = epsilon_end + (epsilon_start - epsilon_end) * math.exp(-1 * step * epsilon_decay)
+    epsilon = epsilon_end + (epsilon_start - epsilon_end) * math.exp(-1 * episode * epsilon_decay)
 
     x = random.random()
 
@@ -152,26 +156,31 @@ def optimize_model(memory, policy_net, target_net, optimizer):
 
     optimizer.step()
 
+# Training
+
 def training(num_episodes, policy_net, memory, target_net, optimizer):
 
+    print('Training...')
     total_reward = 0
+    episodes = 0
 
-    for episode in range(num_episodes):
+    for episode in tqdm(range(num_episodes)):
+
+        episodes += 1
+
+        if episode < training_starts:
+            pass
 
         state, _ = env.reset()
         state = torch.tensor(state, dtype = torch.float32, device = device).unsqueeze(0)
-
         terminated = False
         truncated = False
 
-        step = 0
-
         while not (terminated or truncated):
 
-            action = select_action(state, step, policy_net)
+            action = select_action(state, episode, policy_net)
             observation, reward, terminated, truncated, _ = env.step(action.item())
 
-            step += 1
             total_reward += reward
             reward = torch.tensor([reward], device = device)
             
@@ -190,21 +199,21 @@ def training(num_episodes, policy_net, memory, target_net, optimizer):
 
             # Soft update target network
 
-            if step % C == 0:
+            if episodes % C == 0:
           
                 target_net.load_state_dict(policy_net.state_dict())
 
-        if (episode + 1) % (num_episodes / 10) == 0:
-            print(f'Average total reward obtained every {(num_episodes / 10)} episodes is {total_reward / (num_episodes / 10)} ')
-            total_reward = 0
-
-            
+                
     print('Training complete')
+
+# Testing
 
 def testing(policy_net, num_episodes, save_path = 'animation'):
 
+    print('Testing...')
+
     # Test agent
-    for episode in range(num_episodes):
+    for episode in tqdm(range(num_episodes)):
         state, _ = env.reset()
         state = torch.tensor(state, dtype = torch.float32, device = device).unsqueeze(0)
         terminated = False
@@ -262,16 +271,14 @@ def main():
     optimizer = optim.AdamW(policy_net.parameters(), lr = alpha, amsgrad = True)
     # optimizer = optim.SGD(policy_net.parameters(), lr = alpha)
 
-    capacity = int(1e5)
+    capacity = int(buffer_size)
     memory = ReplayMemory(capacity)
-
-    num_episodes = 100000
 
     # Training
     training(num_episodes, policy_net, memory, target_net, optimizer)
 
     # Testing
-    testing(policy_net, num_episodes = 1)
+    testing(policy_net, num_test_episodes)
 
     
 
