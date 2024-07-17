@@ -1,0 +1,6 @@
+Model Based Reinforcement Learning (MBRL) - 
+
+The basic idea is to try modelling the environment dynamics. An agent repeatedly tries to solve a problem and collects the data of its states and action which it uses to improve its dynamic model of the environment. This is pretty useful in a partially understood environment.
+
+Model Predictive Control (MPC) - 
+

@@ -147,6 +147,10 @@ def optimize_model(memory, policy_net, target_net, optimizer):
     criterion = nn.MSELoss()
     loss = criterion(state_action_values, estimated_state_action_values.unsqueeze(1))
 
+    # Error clipping tends to better performance
+    err = 1
+    torch.clamp(loss, - err, err)
+
     # Optimize
     optimizer.zero_grad()
     loss.backward()
@@ -280,7 +284,7 @@ def main():
     # Testing
     testing(policy_net, num_test_episodes)
 
-    
+    return None
 
 if __name__ == '__main__':
     main()

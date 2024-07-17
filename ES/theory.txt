@@ -1,0 +1,15 @@
+Evolution Strategies (ES):
+--------------------------------------------------------------------------------------------------------------------------
+
+This is a proposed set of algorithm ideas that could compete with RL algorithms.
+It is a type of model-agnostic optimization approach. It learns optimal solution by imitating Darwin's theory of evolution of species by natural selection. Each viable solution is given a fitness score. You begin with the population of random solutions which interact with the environment. The fittest survive, mutate to produce better offstring and the process continues. Hopefully, as it progresses the solutiosn get better.
+
+Advantages of this method and other global optimization methods like this is that it does derivative free optimization making it ideal for non-differentiable models for environments. They are more robust and less likely to get stuck in locoal optima as well. However, it might take longer to converge to an optimal solution.
+
+Cross- Entropy method (CEM) - 
+    It's population based iterative method for optimization.
+    You start with a simple initial probability distribution over the parameter space. (maybe gaussian). Define the number of samples to draw and elite proportion. Evaluate the samples and choose the elite ones. In context of RL, this could be used for optimizing the weights of the policy network using CEM and cumulative reward as a performance metric for candidate parameters.
+    Minimize the cross entropy between our distribution and optimal. This can be done by creating new distribution based on elite samples.
+    Repeat this until a reward threshold is crossed or something similar.
+
+Interestingly, these methods perform extremely well sometimes and is worth exploring further. For instance, it easily outperforms Q-learning methods in the discrete action space of cartpole environment. I suppose scalability will be an issue given that the search space grows exponentially with the state and action space dimensions.

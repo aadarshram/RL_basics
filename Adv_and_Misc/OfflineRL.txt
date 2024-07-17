@@ -1,0 +1,8 @@
+Offline Reinforcement Learning (Offine RL): 
+
+This refers to a situation where you do not have access to direct interactions with the environment in real-time during training (opp: Online RL).
+For online RL, we would need a simulator or actually employ the agent in the real world. The former is hard when we deal with more complex environments which are hard to model in a simulation and the latter is expensive. How offline RL works is you are given a dataset of policies which are either human demonstrations or collected by some other agents. Our agent uses this dataset to learn a policy (offline).
+
+In this case the training is no more an MDP. It's sort of a data-driven Reinforcement Learning.
+
+But it comes with many problems. One of them is the issue of distributional shifts.

@@ -1,0 +1,10 @@
+{
+    "env": "InvertedPendulum-v4",
+    "hyperparameters": {
+        "alpha": 1e-4,
+        "gamma": 0.99,
+        "num_episodes": 50000, 
+        "num_test_episodes": 1
+    },
+    "test_video": "animation"
+}

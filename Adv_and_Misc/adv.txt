@@ -1,6 +1,7 @@
-Some advanced topics in Reinforcement Learning:
+Some advanced topics in Reinforcement Learning and other random things:
 -------------------------------------------------------------------------------------------------------------------------------
 Entropy - 
+
 To allow for more robust policy to changing environments and robust learning we introduce an entropy regularisation term in the objective function.
 Given a policy, calculate the entropy of that policy with a trade-off factor of beta.
 
@@ -27,9 +28,13 @@ Curiosity through Random Network Distillation (RND) -
 
 --------------------------------------------------------------------------------------------------------------------------------------------
 
-Model Based Reinforcement Learning (MBRL) - 
+Others:
+------------------------------------------------------------------------------------
 
-The basic idea is to try modelling the environment dynamics. An agent repeatedly tries to solve a problem and collects the data of its states and action which it uses to improve its model. This is pretty useful in a partially understood environment.
+Importance Sampling - 
 
-Model Predictive Control (MPC) - 
+When trying to approximate expectations what Monte Carlo sampling does is it samples x from p(x) an averages all the samples to get the approximate expectation. What if p(x) is hard to sample from?
 
+Rewrite integral(f*p dx) as integral(f * p/q * q dx) which is approximately 1/n * sum(f * p/q) where p/q is called sampling ratio and q(x) is a non-zero distribution that is easier to sample from.
+
+A rule of thumb is to define q(x) where p(x) * mod (f(x)) is large.

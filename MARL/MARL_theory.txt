@@ -1,0 +1,44 @@
+Multi-agent Reinforcement Learning (MARL):
+------------------------------------------------------------------------------------------
+
+Sometimes, there is a need for multiple agents interacting with each other in an environment. The interaction can either be collaborative or adversarial.
+There are two ways of modelling collaborative learning.
+1. Decentralized learning: The agents learn independent of each other. The effect of any agents actions is considered to be a dynamic change in the environment the agents are working with. However, this doesn't work so well since the existing RL algorithms do very poorly on non-stationary environments. But the design is simple.
+2. Centralized learning: The agents share their parameters and also sample from and contribute to the same expereince buffer. This ensures they all learn a common policy.
+
+Self-play - 
+In case of adversarial learning, each agent needs an opponent not too strong and not too weak. This is achieved by playing your agent against its old copies. This way, the opponent also improves as the agent improves.
+
+How do you measure skill?
+
+The ELO Score - 
+
+The ELO score calculates the relative skill level between two agents in a zero-sum environment.
+For a two agent system, depending on the current rating of the agents, their expected scores are calculated.
+Ea = 1 / (1 + 10 ^ (Rb - Ra) / 400)
+Eb = 1 / (1 + 10 ^ (Ra - Rb) / 400)
+
+If the actual score in a game is S, 
+then the ratings are updated as
+Ra' = Ra + k(Sa - Ea)
+Rb' = Rb + k(Sb - Eb)
+where k is called k-factor which depneds on the game.
+k = 16 for master and k = 32 for weaker players.
+
+The ELO score allows sharing of points while the total remains the same. It is self-correcting. If a strong player wins against a weak one his rating will increase by small amount only.
+
+For team games, the ELO score is used by comparing the average scores of the teams. However this doesn't consider individual contribution and leads to rating deflation.
+---------------------------------------------------------------------------------------------------------------
+
+Cooperative MARL - 
+------------------------------------------------------------------------------------------------------------------------
+
+The problems that multi-agent RL deals with often includes large state and action spaces. Hence, the focus would be on deep RL methods for multi-agents than tabular methods. Also, usually in multi-agents problems each agent has only partial observability. Hence, we model the problems as POMDP (Partially Observed Markov Decision Process).
+If the environment is fully cooperative, then all agents receive same joint reward and each update their policies. But the environment becomes non-stationary in the perspective of any single agent. This would mean we cannot use an underlying assumption of MDP. This will make the training highly unstable as the bellman update won't also work. So the traditional single agents methods seem to fail in this case.
+
+One of the first attempts at implementation was Independent Q-learning (IQL) in which each agent independenly learns in a dynamic enivornment which is affected by other agents. This wasn't very good because of the non-stationarity problem. In order to deal with the non-stationarity, a critic model which looks at global actions and states is introduced. This is called the fully observable critic model. In case of distinct rewards for each agent, each agent needs its own critic model, else one critic model is enough for the whole multi agent system. But the problem with joint reward is that some agents might get lazy and still end up with good rewards because the rest of the agents did well.
+To deal with this, we introduce a share of each agent into the global reward which is formalized as Value Function Factorization where a decomposition function is learned from the global reward. However, a fully observable critic will have high communication cost since it has to observe a lot of agents. Same goes for the actor if the observations and actions are being shared. To improve this atleast a bit we consider sparsely connected network where each agent only communicates with a subset of other agents and not all. Then the agents will seek an optimal solution under consensus with its neighbours. On top of this, in order to reduce the dimensionality further we could possibly make the agents try to learn to communicate -  Learn to send what, when and to who. This implies there is another "communication action" that agents do at each step.
+
+(to be contd...)
+------------------------------------------------------------------------------------------------
+

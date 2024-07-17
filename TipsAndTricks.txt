@@ -1,0 +1,22 @@
+Notes of recommended tips and tricks for better RL practice:
+-----------------------------------------------------------------------------------------------------
+
+# Visualize state visitation, value function.
+# Scale rewards and observations appropriately. Plot histogram and check. Usually, its suggested to follow mean 0 and std dev 1.
+# If algorithm is too sensitive to hyperparameters, you just got lucky.
+# Look for health indicators like value function fit quality, policy entropy, std diagnostics for deep networks like norms and gradients.
+# Always use multiple random seeds and multiple environments to test a new idea.
+# Favour simpicity -> generalization
+# Standardize data (z-transform + clip). Compute a running estimate of mean and std dev.
+# Low gamma works well for well-shaped rewards
+# If TD(lambda) used, high gamma can be put for lambda < 1
+# Look at min, max, mean, std dev of episode returns
+# Look at episode lengths
+# For policy methods, plot policy entropy. Alleviate premature drop using entropy bonus or KL penalty.
+# Compute KL as diagnostic for policy changes.
+# Check explained variance.
+# Zero or tiny final layer to maximize entropy.
+# Q-learning strat - Optimize memory, lr schedule, exploration schedule. DQN converges slowly. Be patient.
+# Techniques from supervised learning dont necessarily work in RL.
+
+ref: Nuts and Bolts of Deep RL - John Schulman

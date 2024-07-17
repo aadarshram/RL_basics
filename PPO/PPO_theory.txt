@@ -15,5 +15,10 @@ L_h = - Es[Ea[log(pi(a/s))]] * beta (beta is a hyperparameter to contorl amount 
 
 There is also another method called the Trust Region Policy Optimization (TRPO) which uses KL divergence constraints outside the objective function to constrain the policy update. However it introduces complexity whereas the former is a much simpler implementation.
 
+Side-note: KL-Divergence - 
+    The Kullback-Leibler divergence (KL) metric is a statistical measure of quantifying the difference between two probabilit distributions (test with baseline). It measures the relative entropy or difference in the information represented by the two distributions.
+    
+    D kl (p(x) || q(x)) = integral(p(x)log(p(x)/q(x))dx) from -inf to inf.
+
 Trust Region Policy Optimization (TRPO) - 
 

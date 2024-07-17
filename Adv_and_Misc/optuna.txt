@@ -1,0 +1,48 @@
+Basic theory behind automatic hyperparameter tuning:
+--------------------------------------------------------------------------------
+
+Careful consideration must be put in choosing the right set of hyperparameters for a machine learning model, especially in Reinforcement Learning. And given that there are so many hyperparameters in RL frameworks and furthermore the uncertainty in a manual optimization attempt using automatic optimization methods become important. Optuna is a popular framework that greatly improves optimization by effective searching while also pruning useless ones to save time.
+
+How do the optimization methods work?
+
+Traditional methods -  
+
+Grid search - This method exhaustively searches through a pre-defined set of hyperparameters.
+Random search - This method selects random values from a predifined subset range and searches.
+
+Bayesian optimization methods - 
+
+Basically we have a surrogate model and an acquisition function. The surrogate model is a probabilistic model that approximates the loss function given hyperparameter inputs. Then the aquisition model guides the selection of next set of points to evaluate. There is an exploration vs exploitation trade-off between choosing random set of points vs points where surrogate model predicts lower values for the objective function.
+This happens iteratively until the budget is exhausted and we hopefully end up with a better set of hyperparameters.
+
+Early stopping based methods - 
+
+Compare the models with different hyperparameters on some intermediate step and discard the ones that perform very poorly.
+
+Evolutionary methods - 
+This follows the process similar to biological evolution. Sample sets of hyperparameters, discard unfit ones, mutate and crossover the good ones to generate new hyperparameters.
+
+When it comes to hyperparameter optimization there are two broad steps.
+Sampling where you use algorithms to find better set of hyperparameters to evaluate in every iteration.
+Pruning where you discard poorly performing sets of values.
+
+Some sampling strategies - 
+
+TPESampler (Tree-Structured Parzen Estimator) - 
+
+NSGAIISampler (Non-dominated sorting genetic algorithm 2) - 
+
+CMA-ES Sampler - 
+
+MOTPE Sampler - 
+
+Some pruning strategies - 
+
+Succesive Halving Pruner - 
+
+Median Pruner - 
+
+HyperbandPruner - 
+
+Optuna is a framework that has extensive algorithms as options to choose from to execute automatic hyperparameter tuning.
+--------------------------------------------------------------------------------------------------------------------------

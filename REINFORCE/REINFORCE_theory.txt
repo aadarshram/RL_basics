@@ -1,4 +1,4 @@
-REINFORCE:
+REINFORCE: (Monte Carlo Policy Gradient)
 ----------------------------------------------------------------------------------------------------------------
 This is a policy-based, model-free, on-policy, Monte Carlo based algorithm which uses Neural Networks as function approximators.
 
@@ -51,6 +51,16 @@ TD method uses bootstrapping to estimate value functions and updates every step 
 However it causes high bias since the estimates are based on current values which may be inaccurate.
 
 A solution is to balance bias and variance by coming to a middle ground.
-N-step bootstrapping - This is a method where you introduce a new hyperparameter called n, where n corresponds to the number of steps in an episode to consider to calculate the cumulative return. So, its neither one step nor whole episode which somehow provides a balance with a suitable value for n.
-------------------------------------------------------------------------------------------------------------------------------
+N-step bootstrapping (TD(n))- This is a method where you introduce a new hyperparameter called n, where n corresponds to the number of steps in an episode to consider to calculate the cumulative return. So, its neither one step nor whole episode which somehow provides a balance with a suitable value for n.
+
+TD(lambda) - 
+
+This is a better version of TD(n). The update equation goes like
+G(t, lambda) = (1-lambda) * sum(lambda ^ n-1 G t:t+n) + lambda^ T-t-1 G t
+
+The weight decays as n increases and lambda = 1 corresponds to monte carlo and lambda = 0 corresponds to TD learning.
+The idea here is to use a weighted TD(n) method with different n's than choosing 1 n. The weight lambda is learnt.
+
+This method is also called forward veiw learning algorithm.
+ ------------------------------------------------------------------------------------------------------------------------------
 

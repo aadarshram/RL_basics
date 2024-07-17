@@ -13,6 +13,16 @@ This exists in Q-learning as well. The loss function which updates the Q values 
 4. Overestimation bias - 
 The update equation for the Q-values calculate the estimated value using a generalized function approximater like NNs which can introduce noise. Suppose the estimated Q-value is higher than what it's true value is then when the update equation keeps considering the maximum each time, the error increases. This is called the problem of overestimation.
 
+Side-note:
+
+Deadly Triad Issue - 
+It is said that when one tries to combine off=policy learning, bootstrapping (TD-learning) and function approximations, instabilities and divergence may arise.
+Why and how to mitigate it?
+This occurs when similar states yield similar outputs in function approximators. However, since we follow off-policy and bootstrapping, some V(s) are not updated as often they are visited and they can be wrong. If you take an example and do the math you see it's values diverging from optimal.
+??????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????
+read how ddqn solves this issue as well. paper in folder
+
+
 A better architecture for the DQN was proposed to alleviate these issues,
 
 It added two main blocks - 
@@ -50,5 +60,5 @@ Add-ons :
 5. Prioritized target updates - Update the target network with all the useful learning.
 6. Distributional DQN - Model the estimated Q-values as a distribution over an exact value.
 7. Noisy DQN - Add noise within the neural networks to enhance further exploration besides the epsilon greedy strategy.
-
+8. DRQN -  uses LSTMs instead of FC network.
 --------------------------------------------------------------------------------------------------------------------

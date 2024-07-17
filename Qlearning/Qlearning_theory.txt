@@ -1,4 +1,4 @@
-Q-learning:
+Q-learning: (Off-policy TD control)
 --------------------------------------------------------------------------------------------------------------------------------
 It is value-based, model-free, off-policy, based on temporal difference method and is tabular.
 
@@ -37,3 +37,6 @@ Can be linear, exponential, inverse (decreases as time increases), piecewise con
 Adaptive learning rate - 
 Can be step decay, exponential decay, inverse time, adaptive (based on gradient's moments)
 ----------------------------------------------------------------------------------------------------------
+
+Note: SARSA (on-policy TD control)
+The Q-learning algorithm was preceeded up an on-policy variant called SARSA (State-Action-Reward-State-Action). The difference lies in the update where SARSA uses the same epsilon greedy policy to update the Q-functions. SARSA is more useful when you care about performance during training as well. (Eg: If you're training a real world robot its expensive to let it do stupid stuff during training)
