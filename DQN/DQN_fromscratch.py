@@ -18,50 +18,17 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 
-# Get config
-with open('config.json', 'r') as file:
-    config = json.load(file)
-
-env_name = config['env']
-alpha = config['hyperparameters']['alpha']
-gamma = config['hyperparameters']['gamma']
-batch_size = config['hyperparameters']['batch_size']
-C = config['hyperparameters']['trgt_update_every']
-buffer_size = config['hyperparameters']['buffer_size']
-epsilon_start = config['hyperparameters']['epsilon_start'] 
-epsilon_end = config['hyperparameters']['epsilon_end'] 
-epsilon_decay = config['hyperparameters']['epsilon_decay'] 
-num_episodes = config['hyperparameters']['num_episodes']
-num_test_episodes = config['hyperparameters']['num_test_episodes']
-training_starts = config['hyperparameters']['num_test_episodes']
-test_video = config['test_video']
-
-# Environment
-
-env = gym.make(env_name, render_mode = 'rgb_array')
-
-# Device
-
-device = torch.device('cuda' if torch.cuda.is_available()
-                      else 'mps' if torch.backends.mps.is_available()
-                      else 'cpu')
-
-print('Using', device)
-
-# Define replay buffer
-
-Transition = namedtuple('Transition', ('state', 'action', 'next_state', 'reward'))
 
 class ReplayMemory(object):
 
-    def __init__(self, capacity):
+    def __init__(self, capacity, Transition):
         self.memory = deque([], capacity)
-    
+        self.Transition = Transition
     def push(self, *args):
         '''
         Save a transition
         '''
-        self.memory.append(Transition(*args))
+        self.memory.append(self.Transition(*args))
 
     def sample(self, batch_size):
         '''
@@ -96,7 +63,7 @@ class DQN(nn.Module):
 
 # Define epslion-greedy
 
-def select_action(state, episode, policy_net):
+def select_action(env, state, episode, policy_net, device, epsilon_start, epsilon_end, epsilon_decay):
 
     epsilon = epsilon_end + (epsilon_start - epsilon_end) * math.exp(-1 * episode * epsilon_decay)
 
@@ -113,7 +80,7 @@ def select_action(state, episode, policy_net):
             return policy_net(state).max(1).indices.view(1,1)
         
 
-def optimize_model(memory, policy_net, target_net, optimizer):
+def optimize_model(memory, policy_net, target_net, optimizer, Transition, device, gamma, batch_size):
 
     if len(memory) < batch_size:
 
@@ -162,7 +129,7 @@ def optimize_model(memory, policy_net, target_net, optimizer):
 
 # Training
 
-def training(num_episodes, policy_net, memory, target_net, optimizer):
+def training(env, num_episodes, policy_net, memory, target_net, optimizer, device, Transition, epsilon_start, epsilon_end, epsilon_decay, training_starts, gamma, batch_size, C):
 
     print('Training...')
     total_reward = 0
@@ -182,7 +149,7 @@ def training(num_episodes, policy_net, memory, target_net, optimizer):
 
         while not (terminated or truncated):
 
-            action = select_action(state, episode, policy_net)
+            action = select_action(env, state, episode, policy_net, device, epsilon_start, epsilon_end, epsilon_decay)
             observation, reward, terminated, truncated, _ = env.step(action.item())
 
             total_reward += reward
@@ -198,7 +165,7 @@ def training(num_episodes, policy_net, memory, target_net, optimizer):
 
             state = next_state
 
-            optimize_model(memory, policy_net, target_net, optimizer)
+            optimize_model(memory, policy_net, target_net, optimizer, Transition, device, gamma, batch_size)
             
 
             # Soft update target network
@@ -212,7 +179,7 @@ def training(num_episodes, policy_net, memory, target_net, optimizer):
 
 # Testing
 
-def testing(policy_net, num_episodes, save_path = 'animation'):
+def testing(env, policy_net, num_episodes, save_path, device):
 
     print('Testing...')
 
@@ -256,8 +223,21 @@ def testing(policy_net, num_episodes, save_path = 'animation'):
         plt.show()
 
 
-def main():
+def DQN_agent(env_name, alpha, gamma, batch_size, C, buffer_size, epsilon_start, epsilon_end, epsilon_decay, num_episodes, num_test_episodes, test_video_path, training_starts):
 
+    env = gym.make(env_name, render_mode = 'rgb_array')
+
+    # Device
+
+    device = torch.device('cuda' if torch.cuda.is_available()
+                        else 'mps' if torch.backends.mps.is_available()
+                        else 'cpu')
+
+    print('Using', device)
+
+    # Define replay buffer
+
+    Transition = namedtuple('Transition', ('state', 'action', 'next_state', 'reward'))
     
     # Environment info
 
@@ -276,15 +256,36 @@ def main():
     # optimizer = optim.SGD(policy_net.parameters(), lr = alpha)
 
     capacity = int(buffer_size)
-    memory = ReplayMemory(capacity)
+    memory = ReplayMemory(capacity, Transition)
 
     # Training
-    training(num_episodes, policy_net, memory, target_net, optimizer)
+    training(env, num_episodes, policy_net, memory, target_net, optimizer, device, Transition, epsilon_start, epsilon_end, epsilon_decay, training_starts, gamma, batch_size, C)
 
     # Testing
-    testing(policy_net, num_test_episodes)
+    testing(env, policy_net, num_test_episodes, test_video_path, device)
 
     return None
 
 if __name__ == '__main__':
-    main()
+
+    # Get config
+
+    with open('example_config.json', 'r') as file:
+        config = json.load(file)
+
+    env_name = config['env']
+    alpha = config['hyperparameters']['alpha']
+    gamma = config['hyperparameters']['gamma']
+    batch_size = config['hyperparameters']['batch_size']
+    C = config['hyperparameters']['trgt_update_every']
+    buffer_size = config['hyperparameters']['buffer_size']
+    epsilon_start = config['hyperparameters']['epsilon_start']
+    epsilon_end = config['hyperparameters']['epsilon_end']
+    epsilon_decay = config['hyperparameters']['epsilon_decay'] 
+    num_episodes = config['hyperparameters']['num_episodes']
+    num_test_episodes = config['hyperparameters']['num_test_episodes']
+    training_starts = config['hyperparameters']['training_starts']
+    test_video_path = config['test_video']
+
+    DQN_agent(env_name, alpha, gamma, batch_size, C, buffer_size, epsilon_start, epsilon_end, epsilon_decay, num_episodes, num_test_episodes, test_video_path, training_starts)
+

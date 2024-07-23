@@ -9,7 +9,11 @@ import matplotlib.pyplot as plt
 from matplotlib import animation
 
 # Create environment
-env = gym.make('CartPole-v1', render_mode = 'rgb_array')
+env = gym.make('FrozenLake-v1', render_mode = 'rgb_array')
+
+state_space = env.observation_space.shape[0]
+action_space = env.action_space.n
+
 
 def select_elite(candidates, rewards, elite_threshold):
     num_elites = int(elite_threshold * len(candidates))
@@ -19,22 +23,9 @@ def select_elite(candidates, rewards, elite_threshold):
     return np.array(elite_samples)
 
 
-def CEM(env, num_iterations, num_samples, elite_threshold):
-    
-    state_space = env.observation_space.shape[0]
-    action_space = env.action_space.n
+def evaluate_candidates(candidates, rewards):
 
-    W_means = np.zeros((state_space, action_space))
-    W_std_devs = np.ones((state_space, action_space))
-
-    for iter in range(num_iterations):
-
-        # Check samples
-
-        candidates = np.random.normal(W_means, W_std_devs, size = (num_samples, state_space, action_space))
-        rewards = np.zeros(num_samples)
-
-        for i in range(num_samples):
+    for i in range(num_samples):
 
             policy_weights = candidates[i]
 
@@ -52,16 +43,33 @@ def CEM(env, num_iterations, num_samples, elite_threshold):
                     break
 
             rewards[i] = total_reward
+
+    return rewards
+
+def CEM_Agent(env, num_iterations, num_samples, elite_threshold, dimension, problem_type):
+    
+
+    means = np.zeros(dimension)
+    std_devs = np.ones(dimension)
+
+    for iter in range(num_iterations):
+
+        # Check samples
+
+        candidates = np.random.normal(means, std_devs, size = ((1,) + dimension))
+        rewards = np.zeros(num_samples)
+
+        rewards = evaluate_candidates(candidates, rewards)
         
         # Choose elite
 
         elite_candidates = select_elite(candidates, rewards, elite_threshold)
-        W_means = np.mean(elite_candidates, axis = 0)
-        W_std_devs = np.std(elite_candidates, axis = 0)
+        means = np.mean(elite_candidates, axis = 0)
+        std_devs = np.std(elite_candidates, axis = 0)
 
         print(f'Mean reward in iteration {iter + 1} is {np.mean(rewards)}')
 
-    return W_means
+    return means
 
 # Training
 
@@ -70,8 +78,9 @@ num_iterations = 10
 num_samples = 50
 elite_threshold = 0.5
 
+dimension = (state_space, action_space)
 # Training
-best_policy = CEM(env, num_iterations, num_samples, elite_threshold)
+best_policy = CEM_Agent(env, num_iterations, num_samples, elite_threshold, dimension, problem_type = 'continuous')
 
 # Testing
 print('Testing')

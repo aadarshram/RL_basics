@@ -20,3 +20,9 @@ Notes of recommended tips and tricks for better RL practice:
 # Techniques from supervised learning dont necessarily work in RL.
 
 ref: Nuts and Bolts of Deep RL - John Schulman
+
+---------------------------------------------
+For implementation:
+# Use frameworks like RL-zoo which has ready scripts and best hyperparameters. StableBaseline3 has ready best algorithms for model-free RL.
+# To accelerate training use SBX which is SB3 + JAX.
+# Normalization is important for algorithms like PPO, TRPO, A2C.
