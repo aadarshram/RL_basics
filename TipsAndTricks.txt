@@ -1,5 +1,8 @@
 Notes of recommended tips and tricks for better RL practice:
------------------------------------------------------------------------------------------------------
+ref: Nuts and Bolts of Deep RL - John Schulman
+
+
+Old notes:
 
 # Visualize state visitation, value function.
 # Scale rewards and observations appropriately. Plot histogram and check. Usually, its suggested to follow mean 0 and std dev 1.
@@ -19,7 +22,6 @@ Notes of recommended tips and tricks for better RL practice:
 # Q-learning strat - Optimize memory, lr schedule, exploration schedule. DQN converges slowly. Be patient.
 # Techniques from supervised learning dont necessarily work in RL.
 
-ref: Nuts and Bolts of Deep RL - John Schulman
 
 ---------------------------------------------
 For implementation:

@@ -1,6 +1,5 @@
 # Basics of Reinforcement Learning
 
-
 ## Contents
 - [Basics of Reinforcement Learning](#basics-of-reinforcement-learning)
   - [Contents](#contents)
@@ -17,8 +16,16 @@
     - [Monte Carlo Policy Evaluation (MCPE)](#monte-carlo-policy-evaluation-mcpe)
   - [Q-learning](#q-learning)
     - [Q- Bellman Equation](#q--bellman-equation)
-  - [Deep Q-learning ( IN PROGRESS)](#deep-q-learning--in-progress)
-  - [TO BE CONTINUED](#to-be-continued)
+  - [Deep Q-learning](#deep-q-learning)
+  - [Policy-based Methods](#policy-based-methods)
+    - [Policy gradient method](#policy-gradient-method)
+    - [Policy-gradient theorem](#policy-gradient-theorem)
+    - [Monte Carlo REINFORCE](#monte-carlo-reinforce)
+  - [Actor-Critic Methods](#actor-critic-methods)
+    - [Advantage Actor-Critic (A2C)](#advantage-actor-critic-a2c)
+  - [Proximal-Policy Optimization (PPO)](#proximal-policy-optimization-ppo)
+    - [Clipped Surrogate Objective](#clipped-surrogate-objective)
+  - [TODO FURTHER](#todo-further)
 
 ## What is Reinforcement Learning anyway?
 
@@ -197,14 +204,128 @@ Q-learning is then, simply, TD method involving Q-values.
 
 *Algorithm, implementation and further notes can be found in QLearning/*
 
-## Deep Q-learning ( IN PROGRESS)
-- Maintaining and updating a Q-table becomes ineffective for large state space environments.
-- Deep Q learning uses Neural netwroks as function approximators to approximate the Q values- given a state it outputs approxmate Q values for each action based on that state.
-- Cons: still has to deal with discrete fininite action spaces since it outputs a head for each action for every input state.
-- parametrizded Q function Q_theta(s,a)
-- note on using history. can stack multiple observations together as input to leverage temporal information. your definition of state is varied to include a stack of histories thats it
-- The Q-learning update is modified to update the weights by minizming loss of TD error to zero via gradient descent.
-- Later with reason add sampling step of experience replay
-- Non linear function approximation of Q values + bootstrapping causes instability - to tackle this it uses experience replay buffer- efficient use fof experience, fixed Q target - stable training and double DQN to handle overestimation of Q values.
-## TO BE CONTINUED
-- left off here from handling instability in DQN- https://huggingface.co/learn/deep-rl-course/en/unit3/deep-q-algorithm 
+## Deep Q-learning
+
+Q-learning algorithm being tabular-based method, fails in environments with large state-spaces. One would like to then convert the table into a generalized function approximation for the Q-values. A popular way to learn any function approximation is via deep neural networks. Deep Q-learning (DQN) is a Q-learning implementation via neural network function approximation. Turns out, function approximation brings in new challenges.
+
+*Algorithm, implementation and further notes can be found in DQN/*
+
+## Policy-based Methods
+
+DQNs while impressive, predicts Q-value per action given state and hence cannot model high-dimensional or continuous action spaces. One then attempts to skip the value function prediction and directly predict a distribution over actions given state instead giving rise to **policy-based methods**. Learning action distribution also helps modelling **stochastic policies** wherein a given state may correspond to multiple desired actions be taken.
+
+Parametrize the policy $\pi$(a|s) by $\theta$ and find optimal $\theta$ maximizing the expected cumulative return following $\pi$, J($\theta$).
+
+### Policy gradient method
+A subset of policy-based methods, policy gradients maximizes the objective via gradient ascent. (TODO: Brief about other policy based methods: hill climbing, simulated annealing, evolutionary algorithms, etc.)
+
+max_$\theta$ J($\theta$) = E[R($\tau$)] # $\tau$ sampled from $\pi$($\theta$)
+
+Update:  
+$\theta$ = $\theta$ + $\alpha$ * $\nabla$ J($\theta$)
+
+### Policy-gradient theorem
+
+To follow the stochastic iteration template (substitute unknown expectation with sample), we desire to find an expression for the expectation of the gradient of the objective described before. This calls for certain mathematical simplications (with fine assumptions) which underlie the policy-gradient theorem.
+
+$\nabla$ J($\theta$) = E[ $\sum$_t $\nabla$\_$\theta$ log $\pi$\_$\theta$ (at | st) R($\tau$)]
+
+### Monte Carlo REINFORCE
+
+The expectation of the gradient figured previously can then be substituted via monte carlo sample mean over a set of trajectories which yields the **Monte Carlo REINFORCE** algorithm.
+  
+TODO: Algorithm and deep dive (in PolicyGradients/)
+
+**NOTE**
+- Policy-based methods have better convergence properties (TODO: brief) but can converge to a local maxima than global. The latter challenge was introduced by the non-convexity of the parametrized objective (value-based methods yield convex objective and hence global maxima).
+- REINFORCE algorithm has high variance (due to monte carlo returns).
+
+**TODO**
+- Additional readings and implementation.
+- https://www.youtube.com/watch?v=y3oqOjHilio
+- hands on cartpole and pixelcopter - https://huggingface.co/learn/deep-rl-course/en/unit4/hands-on 
+- ch 13 suttom barto
+- https://spinningup.openai.com/en/latest/spinningup/rl_intro3.html
+- https://johnwlambert.github.io/policy-gradients/
+- https://github.com/pytorch/examples/blob/main/reinforcement_learning/reinforce.py
+- https://github.com/MrSyee/pg-is-all-you-need
+- https://jonathan-hui.medium.com/rl-policy-gradients-explained-9b13b688b146 
+
+
+***NOTE:Beyond this section, I only have a running understanding of the concepts and is prone to volatile updates!***
+
+## Actor-Critic Methods
+
+The policy-gradient method, REINFORCE faces high variance and hence sample inefficiency (variance asympotitically converges to 0 with infinite samples) and slow learning owing to its Monte Carlo estimate of the returns. Actor-Critic methods, instead use a Critic to estimate the value function of the state-action to bootstrap the Monte Carlo return in the Actor update (control).
+
+Actor: St -> At
+Critic: {St, At} -> Q(St, At)
+Update:
+  Actor: d$\theta$ = $\alpha$ * $\nabla$ log$\pi$(s,a) Q(s, a)
+
+The Critic, as usual, is update via on-policy TD-learning.
+
+(Env: St+1, Rt+1)
+Actor: St+1 -> At+1
+Critic: {St+1, At+1} -> Q(St+1, At+1)
+Update:
+  Critic: dw = $\beta$ * (Rt+1 + $\gamma$ * Q(St+1, At+1) - Q(St, At)) $\nabla$ Q(St, At)
+
+**TODO**:
+- More reading on bias variance tradeoffs
+  - https://blog.mlreview.com/making-sense-of-the-bias-variance-trade-off-in-deep-reinforcement-learning-79cf1e83d565 
+  - https://www.endtoend.ai/blog/bias-variance-tradeoff-in-reinforcement-learning/
+  - https://balajiai.github.io/high_variance_in_policy_gradients
+
+### Advantage Actor-Critic (A2C)
+
+Turns out, a better signal to the actor would be the relative value of certain state-action pair than absolute yielding the Advantage function:
+A(St, At) = Q(St, At) - V(St)
+
+Since, Q(St, At) = R(St, At) + $\gamma$ * V(St+1)
+
+Simplifying,
+A(St, At) = TD Error of V(St) !
+
+Using the advantage function for the Actor update and a state-value prediction Critic network yields a variant- Advantage Actor-Critic (A2C)
+
+TODO: 
+- Implementation of robot arm using A2C in panda gym - https://huggingface.co/learn/deep-rl-course/en/unit6/hands-on 
+- Further reading:
+  - https://spinningup.openai.com/en/latest/spinningup/rl_intro.html?highlight=advantage%20functio#advantage-functions 
+  - https://www.youtube.com/watch?v=AKbX1Zvo7r8
+  - https://arxiv.org/abs/1602.01783v2 
+  
+## Proximal-Policy Optimization (PPO)
+A single sample transition may not be a good representative of the dynamics of a certain state and hence one would like to ensure conservative policy updates. To this end, we compute the ratio of the current to former policy for a given state-action pair clipped to the range $\in$ (1e, 1+e) for some threshold e (Usually, =0.2) and use that as a drop-in replacement to the log probability in the actor update:
+
+### Clipped Surrogate Objective
+Recall Actor update:
+$\nabla$ J($\theta$) = E[ $\sum$_t $\nabla$\_$\theta$ log $\pi$\_$\theta$ (at | st) At]
+
+Drop-in replacement of the ratio (clipped),  
+r_t ($\theta$) = $\pi$ (at|st) / $\pi$\_former (at|st)
+
+Yields,  
+J($\theta$) = E[ $\sum$_t min(r_t($\theta$)At, clip(r_t($\theta$), 1-e, 1+e)At)]
+
+The clipped surrogate objective is an improvement over a previous work, **Trust Region POlicy Optimization (TRPO)** which also uses the ratio but alongside other complicated measures than a clipped objective to ensure monotonic policy improvement (TODO: brief more).
+
+The actual objective of PPO is a combination of the clipped surrogate objective and a sqaured value errror and entropy bonus loss. (TODO: brief more)
+
+**TODO**
+- Additional readings:
+  - read Towards Delivering a Coherent Self-Contained Explanation of Proximal Policy Optimization” by Daniel Bick, especially part 3.4. 
+  - hands on https://huggingface.co/learn/deep-rl-course/en/unit8/hands-on-cleanrl 
+  - https://stackoverflow.com/questions/46422845/what-is-the-way-to-understand-proximal-policy-optimization-algorithm-in-rl
+  - https://www.youtube.com/watch?v=KjWF8VIMGiY
+  - https://openai.com/index/openai-baselines-ppo/
+  - https://spinningup.openai.com/en/latest/algorithms/ppo.html
+  - https://arxiv.org/abs/1707.06347
+  - https://iclr-blog-track.github.io/2022/03/25/ppo-implementation-details/
+  - https://www.youtube.com/watch?v=MEt6rrxH8W4
+  - https://www.youtube.com/watch?v=C3p2wI4RAi8
+  - Sample factory implementaiton for vizdoom- https://huggingface.co/learn/deep-rl-course/en/unit8/hands-on-sf 
+
+## TODO FURTHER
+- Advanced topics in RL: https://huggingface.co/learn/deep-rl-course/en/unitbonus3/introduction 
